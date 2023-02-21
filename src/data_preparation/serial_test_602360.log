@@ -1,0 +1,26 @@
+/home2/faculty/bjastrzebski/github/DeepIndex/src/data_preparation
+sr-1.eden
+Tue 21 Feb 2023 10:01:06 PM CET
+Running plot script on a single CPU core
+Load data...
+Filter...
+Abstract...
+Author ids...
+Saving...
+Traceback (most recent call last):
+  File "/mnt/evafs/faculty/home/bjastrzebski/github/DeepIndex/src/data_preparation/data_preparation.py", line 33, in <module>
+    df[['id', 'author_ids', 'title', 'abstract', 'references']].to_parquet(f'{path}/{name}.parquet')
+  File "/home2/faculty/bjastrzebski/.pyenv/versions/REFSA_v3.10.4/lib/python3.10/site-packages/pandas/util/_decorators.py", line 211, in wrapper
+    return func(*args, **kwargs)
+  File "/home2/faculty/bjastrzebski/.pyenv/versions/REFSA_v3.10.4/lib/python3.10/site-packages/pandas/core/frame.py", line 2976, in to_parquet
+    return to_parquet(
+  File "/home2/faculty/bjastrzebski/.pyenv/versions/REFSA_v3.10.4/lib/python3.10/site-packages/pandas/io/parquet.py", line 426, in to_parquet
+    impl = get_engine(engine)
+  File "/home2/faculty/bjastrzebski/.pyenv/versions/REFSA_v3.10.4/lib/python3.10/site-packages/pandas/io/parquet.py", line 52, in get_engine
+    raise ImportError(
+ImportError: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+Tue 21 Feb 2023 10:16:31 PM CET

@@ -1,0 +1,7 @@
+/home2/faculty/bjastrzebski/github/DeepIndex/src/data_preparation
+sr-1.eden
+Tue 21 Feb 2023 09:49:26 PM CET
+Running plot script on a single CPU core
+/var/spool/slurm/slurmd/job602359/slurm_script: line 13: 22224 Killed                  python3 data_preparation.py
+Tue 21 Feb 2023 09:56:20 PM CET
+slurmstepd: error: Detected 1 oom-kill event(s) in StepId=602359.batch. Some of your processes may have been killed by the cgroup out-of-memory handler.
