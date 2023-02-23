@@ -5,11 +5,11 @@
 #SBATCH --mail-user=bogdan.jastrzebski.dokt@pw.edu.pl # Where to send mail
 #SBATCH --ntasks=1 # Run on a single CPU
 #SBATCH --gpus=1
-#SBATCH --mem=32gb # Job memory request
-#SBATCH --time=00:00:10 # Time limit hrs:min:sec
+#SBATCH --mem=128gb # Job memory request
+#SBATCH --time=15:00:00 # Time limit hrs:min:sec
 #SBATCH --output=serial_test_%j.log # Standard output and error log
 pwd; hostname; date
 echo "Start of the procedure..."
-python3 extract.py
+python3 train2.py
 echo "Done."
 date
