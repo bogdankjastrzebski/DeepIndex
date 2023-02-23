@@ -1,9 +1,8 @@
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import torch
 import time
 from tqdm import trange, tqdm
+import os
 
 class SparseMatrix(torch.utils.data.Dataset):
     
@@ -65,8 +64,8 @@ class EmbeddingWithBias(torch.nn.Module):
         
         self.embedding_dim = embedding_dim 
         self.shape = (n, embedding_dim)
-        self.W = torch.nn.Embedding(n, embedding_dim)
-        self.b = torch.nn.Embedding(n, 1)
+        self.W = torch.nn.Embedding(n, embedding_dim, sparse=True)
+        self.b = torch.nn.Embedding(n, 1, sparse=True)
         
     def forward(self, idx):
         return self.W(idx), self.b(idx)
@@ -104,7 +103,7 @@ class SymmetricMatrixFactorization(torch.nn.Module):
 def create_model(n, dim, seed=26122022):
     torch.manual_seed(seed)
     m = SymmetricMatrixFactorization(n, dim).cuda()
-    opt = torch.optim.Adam(m.parameters(), lr=0.0001)
+    opt = torch.optim.SparseAdam(m.parameters(), lr=0.001)
     losses = {
         'train': {
             'pos' : [],
@@ -177,9 +176,10 @@ def train_model(m, opt, dl_train, dl_valid, losses, EPOCHS=1, seed=26012023):
         with torch.no_grad():
             for ls, rs, vs in dl_valid:
                 
+                vs = vs == 1
                 p = m(ls, rs).sigmoid()
-                L_pos = -(0.001 + p[ vs]).log().mean()
-                L_neg = -(1.001 - p[~vs]).log().mean()
+                L_pos = -(0.001+p[vs]).log().mean()
+                L_neg = -(1.001-p[~vs]).log().mean()
                 L_valid_pos += L_pos.item()
                 L_valid_neg += L_neg.item()
         
@@ -194,13 +194,22 @@ def train_model(m, opt, dl_train, dl_valid, losses, EPOCHS=1, seed=26012023):
         losses['valid']['neg'].append(L_valid_neg_prev)
         
         pbar.set_description(f" {L_train_pos_prev:.03f} {L_valid_pos_prev:.03f} {L_train_neg_prev:.03f} {L_valid_neg_prev:.03f} ")
+
+
+        torch.save(
+            (
+                m.state_dict(),
+                losses
+            ),
+            f"{model_path}/model_{round(time.time()):012d}.pt"
+        )
         
 def evaluate_model(m, dl_test):
     L_test_pos = 0
     
     with torch.no_grad():
         for ls, rs, vs in dl_valid:
-            
+            v = v == 1  
             p = m(ls, rs).sigmoid()
             L_pos = -p[vs].log().mean()
             L_neg = -(1-p[~vs]).log().mean()
@@ -213,17 +222,34 @@ def evaluate_model(m, dl_test):
 #                                  Training                                         # 
 # --------------------------------------------------------------------------------- #
 
-X, transform = torch.load('data/articles_prepared.pt')
+path = '../../data'
+name = 'articles_prepared'
+model_path = "./models/0"
+
+assert len(os.listdir(model_path)) == 0
+
+X, transform = torch.load(f'{path}/{name}.pt')
 
 X = X.cuda()
 
-dl_train, dl_valid, dl_test, ds_neg = prepare_dataloaders(X, 64, [0.9, 0.05, 0.05])
+n = X.shape[0]
+m = n // 100
+
+dl_train, dl_valid, dl_test, ds_neg = prepare_dataloaders(X, 2*1024, [n - 2*m, m, m]) # [0.9, 0.05, 0.05])
+
+print(len(dl_train))
+print(len(dl_valid))
+print(len(dl_test))
 
 NUMBER_UNIQUE = X.unique().shape[0]
 
-m, opt, losses = create_model(NUMBER_UNIQUE, 64)
+m, opt, losses = create_model(NUMBER_UNIQUE, 256)
 
-train_model(m, opt, dl_train, dl_valid, losses, EPOCHS=1)
 
-torch.save((m.cpu().state_dict(), losses), f"model_{round(time.time()):012d}.pt")
+torch.save((m.state_dict(), losses), f"{model_path}/model_{round(time.time()):012d}.pt")
+
+train_model(m, opt, dl_train, dl_valid, losses, EPOCHS=10)
+
+torch.save((m.state_dict(), losses), f"{model_path}/model_{round(time.time()):012d}.pt")
+
 
